@@ -26,4 +26,5 @@ client.on("guildMemberAdd", member => {
     );
 });
 
-client.login("MTUwMDIxNzI3MTE1NzUyNjcxOA.GcVqkF.oLPn9nv-nW-GXFt8Newvunek1ooaS8eVdxCHFM");
+// التوكن من Railway Variables
+client.login(process.env.TOKEN);
