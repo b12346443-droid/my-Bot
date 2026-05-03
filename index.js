@@ -10,7 +10,7 @@ const client = new Client({
 });
 
 client.once("ready", () => {
-    console.log(Logged in as ${client.user.tag});
+    console.log(`Logged in as ${client.user.tag}`);
 });
 
 
@@ -18,6 +18,7 @@ client.once("ready", () => {
 // 👋 لوق دخول
 // =========================
 client.on("guildMemberAdd", async (member) => {
+
     const logChannel = client.channels.cache.get("1428876171411456145");
     if (!logChannel) return;
 
@@ -27,12 +28,13 @@ client.on("guildMemberAdd", async (member) => {
         .addFields(
             { name: "👤 الاسم", value: member.user.tag, inline: true },
             { name: "🆔 الايدي", value: member.user.id, inline: true },
-            { name: "👥 العدد", value: ${member.guild.memberCount} }
+            { name: "👥 العدد", value: `${member.guild.memberCount}` }
         )
         .setFooter({ text: member.guild.name })
         .setTimestamp();
 
     logChannel.send({ embeds: [embed] });
+
 });
 
 
@@ -40,6 +42,7 @@ client.on("guildMemberAdd", async (member) => {
 // 👋 لوق خروج
 // =========================
 client.on("guildMemberRemove", async (member) => {
+
     const logChannel = client.channels.cache.get("1428876173357875211");
     if (!logChannel) return;
 
@@ -49,12 +52,13 @@ client.on("guildMemberRemove", async (member) => {
         .addFields(
             { name: "👤 الاسم", value: member.user.tag, inline: true },
             { name: "🆔 الايدي", value: member.user.id, inline: true },
-            { name: "👥 المتبقي", value: ${member.guild.memberCount} }
+            { name: "👥 المتبقي", value: `${member.guild.memberCount}` }
         )
         .setFooter({ text: member.guild.name })
         .setTimestamp();
 
     logChannel.send({ embeds: [embed] });
+
 });
 
 
@@ -62,10 +66,12 @@ client.on("guildMemberRemove", async (member) => {
 // 🗑️ حذف روم
 // =========================
 client.on("channelDelete", async (channel) => {
+
     const logChannel = client.channels.cache.get("1428876164574740501");
     if (!logChannel) return;
 
     try {
+
         const logs = await channel.guild.fetchAuditLogs({
             type: 12,
             limit: 1
@@ -80,7 +86,7 @@ client.on("channelDelete", async (channel) => {
             .setTitle("🗑️ تم حذف روم")
             .setColor("Red")
             .addFields(
-                { name: "👤 المسؤول", value: ${executor.tag}, inline: true },
+                { name: "👤 المسؤول", value: `${executor}`, inline: true },
                 { name: "🆔 الايدي", value: executor.id, inline: true },
                 { name: "📂 الروم", value: channel.name }
             )
@@ -92,6 +98,7 @@ client.on("channelDelete", async (channel) => {
     } catch (error) {
         console.log(error);
     }
+
 });
 
 
@@ -99,10 +106,12 @@ client.on("channelDelete", async (channel) => {
 // ✏️ تعديل روم
 // =========================
 client.on("channelUpdate", async (oldChannel, newChannel) => {
+
     const logChannel = client.channels.cache.get("1428876164574740501");
     if (!logChannel) return;
 
     try {
+
         const logs = await newChannel.guild.fetchAuditLogs({
             type: 11,
             limit: 1
@@ -117,7 +126,7 @@ client.on("channelUpdate", async (oldChannel, newChannel) => {
             .setTitle("✏️ تم تعديل روم")
             .setColor("Orange")
             .addFields(
-                { name: "👤 المسؤول", value: ${executor.tag}, inline: true },
+                { name: "👤 المسؤول", value: `${executor}`, inline: true },
                 { name: "📂 قبل", value: oldChannel.name || "N/A", inline: true },
                 { name: "📂 بعد", value: newChannel.name || "N/A", inline: true }
             )
@@ -129,10 +138,8 @@ client.on("channelUpdate", async (oldChannel, newChannel) => {
     } catch (error) {
         console.log(error);
     }
+
 });
 
 
-// =========================
-// 🔑 تشغيل البوت
-// =========================
 client.login(process.env.TOKEN);
