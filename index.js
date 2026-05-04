@@ -468,80 +468,112 @@ client.on("messageCreate", async (message) => {
             message.channel.send({ embeds: [embed] });
         }
 
-        // =======================
-        // تحذير
-        // =======================
-        if (cmd === "تحذير" || cmd === "ت") {
-            if (!hasRole(member)) return;
+       // =======================
+// تحذير
+// =======================
+if (cmd === "تحذير" || cmd === "ت") {
+    if (!hasRole(member)) return;
 
-            const target = message.mentions.members.first();
-            const reason = args.slice(1).join(" ");
-            if (!target || !reason) return;
+    const target = message.mentions.members.first();
+    const reason = args.slice(1).join(" ");
+    if (!target || !reason) return;
 
-            if (!warns[target.id]) warns[target.id] = [];
-            warns[target.id].push({ reason, by: message.author.tag });
-            saveWarns();
+    if (!warns[target.id]) warns[target.id] = [];
+    warns[target.id].push({ reason, by: message.author.tag });
+    saveWarns();
 
-            const embed = new EmbedBuilder()
-                .setColor("#e67e22")
-                .setTitle("⚠️ | تم إصدار تحذير")
-                .setDescription(`• العضو: **${target.user.tag}**
+    const embed = new EmbedBuilder()
+        .setColor("#e67e22")
+        .setTitle("⚠️ | تم إصدار تحذير")
+        .setDescription(`• العضو: **${target.user.tag}**
 • السبب: **${reason}**
 • بواسطة: **${member.user.tag}**`)
-                .setFooter({ text: FOOTER })
-                .setTimestamp();
+        .setFooter({ text: FOOTER })
+        .setTimestamp();
 
-            message.channel.send({ embeds: [embed] });
-        }
+    message.channel.send({ embeds: [embed] });
+}
 
-        // =======================
-        // قفل الروم -قفل / -ق
-        // =======================
-        if (cmd === "قفل" || cmd === "ق") {
-            if (!isAdmin(member)) return;
+// =======================
+// قفل الروم -قفل / -ق
+// =======================
+if (cmd === "قفل" || cmd === "ق") {
+    if (!isAdmin(member)) return;
 
-            await message.channel.permissionOverwrites.edit(
-                message.guild.id,
-                { SendMessages: false }
-            );
+    await message.channel.permissionOverwrites.edit(
+        message.guild.id,
+        { SendMessages: false }
+    );
 
-            const embed = new EmbedBuilder()
-                .setColor("#e74c3c")
-                .setTitle("🔒 | تم قفل الروم")
-                .setDescription(`• تم منع إرسال الرسائل في هذا الروم
+    const embed = new EmbedBuilder()
+        .setColor("#e74c3c")
+        .setTitle("🔒 | تم قفل الروم")
+        .setDescription(`• تم منع إرسال الرسائل في هذا الروم
 • بواسطة: **${member.user.tag}**`)
-                .setFooter({ text: FOOTER })
-                .setTimestamp();
+        .setFooter({ text: FOOTER })
+        .setTimestamp();
 
-            message.channel.send({ embeds: [embed] });
-        }
+    message.channel.send({ embeds: [embed] });
+}
 
-        // =======================
-        // فتح الروم -فتح / -ف
-        // =======================
-        if (cmd === "فتح" || cmd === "ف") {
-            if (!isAdmin(member)) return;
+// =======================
+// فتح الروم -فتح / -ف
+// =======================
+if (cmd === "فتح" || cmd === "ف") {
+    if (!isAdmin(member)) return;
 
-            await message.channel.permissionOverwrites.edit(
-                message.guild.id,
-                { SendMessages: true }
-            );
+    await message.channel.permissionOverwrites.edit(
+        message.guild.id,
+        { SendMessages: true }
+    );
 
-            const embed = new EmbedBuilder()
-                .setColor("#2ecc71")
-                .setTitle("🔓 | تم فتح الروم")
-                .setDescription(`• تم السماح بإرسال الرسائل في هذا الروم
+    const embed = new EmbedBuilder()
+        .setColor("#2ecc71")
+        .setTitle("🔓 | تم فتح الروم")
+        .setDescription(`• تم السماح بإرسال الرسائل في هذا الروم
 • بواسطة: **${member.user.tag}**`)
-                .setFooter({ text: FOOTER })
-                .setTimestamp();
+        .setFooter({ text: FOOTER })
+        .setTimestamp();
 
-            message.channel.send({ embeds: [embed] });
-        }
+    message.channel.send({ embeds: [embed] });
+}
+
+} catch (err) {
+    console.error(err);
+}
+}); // ← إغلاق messageCreate بشكل صحيح
+
+// =======================
+// نظام الترحيب
+// =======================
+client.on("guildMemberAdd", async (member) => {
+    try {
+        const channelId = "1498773103033978970"; // روم الترحيب
+        const channel = member.guild.channels.cache.get(channelId);
+        if (!channel) return;
+
+        const welcomeImage = "https://media.discordapp.net/attachments/1457006310825660467/1500573799890948286/ChatGPT_Image_Apr_28_2026_10_34_45_PM-1.png?ex=69f99681&is=69f84501&hm=6b76ab48118ae7b05f6381943fe45e1e2a278e9f03a7fce031b84d8b85047ae7&=&format=webp&quality=lossless&width=1240&height=825";
+
+        const embed = new EmbedBuilder()
+            .setColor("#2ecc71")
+            .setTitle("Welcome to ANR2 Community")
+            .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+            .setImage(welcomeImage)
+            .setDescription(`
+♥︎ 𝑾𝒆𝒍𝒄𝒐𝒎𝒆 𝒕𝒐 𝑨𝑵𝑹𝟐 𝑪𝑶𝑴𝑴𝑼𝑵𝑰𝑻𝒀 🌊 <@${member.id}>  
+
+★ 𝐘𝐨𝐮 𝐍𝐮𝐦𝐛𝐞𝐫 **${member.guild.memberCount}** ✨️  
+𝐀𝐜𝐭 𝐋𝐢𝐤𝐞 𝐭𝐡𝐢𝐬 𝐩𝐥𝐚𝐜𝐞 𝐢𝐬 𝐲𝐨𝐮𝐫 𝐡𝐨𝐦𝐞
+            `)
+            .setFooter({ text: "ANR2 System" })
+            .setTimestamp();
+
+        channel.send({ embeds: [embed] });
 
     } catch (err) {
         console.error(err);
     }
-}); // ← ← ← إغلاق الحدث كامل
+});
 
 client.login(process.env.TOKEN);
 
