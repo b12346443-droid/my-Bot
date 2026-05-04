@@ -536,3 +536,31 @@ if (cmd === "فتح" || cmd === "ف") {
 
     message.channel.send({ embeds: [embed] });
 }
+// =======================
+// فتح الروم -فتح / -ف
+// =======================
+if (cmd === "فتح" || cmd === "ف") {
+    if (!isAdmin(member)) return;
+
+    await message.channel.permissionOverwrites.edit(
+        message.guild.id,
+        { SendMessages: true }
+    );
+
+    const embed = new EmbedBuilder()
+        .setColor("#2ecc71")
+        .setTitle("🔓 | تم فتح الروم")
+        .setDescription(`• تم السماح بإرسال الرسائل في هذا الروم
+• بواسطة: **${member.user.tag}**`)
+        .setFooter({ text: FOOTER })
+        .setTimestamp();
+
+    message.channel.send({ embeds: [embed] });
+}
+
+client.login(process.env.TOKEN);
+
+const http = require("http");
+http.createServer((req, res) => res.end("Bot is running")).listen(3000);
+
+
