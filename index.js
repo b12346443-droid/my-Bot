@@ -1,4 +1,5 @@
-const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
+const { Client, GatewayIntentBits, EmbedBuilder, PermissionsBitField } = require("discord.js");
+const fs = require("fs");
 
 const client = new Client({
     intents: [
@@ -11,103 +12,121 @@ const client = new Client({
     ]
 });
 
-client.once("ready", () => {
-    console.log(`✅ Logged in as ${client.user.tag}`);
-});
-
+const PREFIX = "-";
 
 // =========================
-// 👋 دخول السيرفر
+// 📊 تحذيرات (حفظ دائم)
+// =========================
+let warns = {};
+if (fs.existsSync("./warns.json")) {
+    warns = JSON.parse(fs.readFileSync("./warns.json"));
+}
+
+function saveWarns() {
+    fs.writeFileSync("./warns.json", JSON.stringify(warns, null, 2));
+}
+
+// =========================
+// 🔐 الرتب
+// =========================
+const ADMIN_ROLES = [
+    "1448673238790963260",
+    "1448677276559609906",
+    "1483587014010863816",
+    "1483476272133963797"
+];
+
+function hasRole(member) {
+    return member.roles.cache.some(r => ADMIN_ROLES.includes(r.id));
+}
+
+function isAdmin(member) {
+    return member.permissions.has(PermissionsBitField.Flags.Administrator);
+}
+
+// =========================
+// 🤖 تشغيل
+// =========================
+client.once("ready", () => {
+    console.log(`Logged in as ${client.user.tag}`);
+});
+
+// =========================
+// 👋 دخول سيرفر
 // =========================
 client.on("guildMemberAdd", async (member) => {
 
-    const logChannel = client.channels.cache.get("1428876171411456145");
-    if (!logChannel) return;
+    const ch = client.channels.cache.get("1428876171411456145");
+    if (!ch) return;
 
     const embed = new EmbedBuilder()
-        .setTitle("📥 عضو دخل السيرفر")
+        .setTitle("📥 دخول عضو")
         .setColor("Green")
         .setThumbnail(member.user.displayAvatarURL())
         .addFields(
-            { name: "👤 العضو", value: `${member.user}`, inline: true },
-            { name: "🆔 الايدي", value: member.user.id, inline: true },
+            { name: "👤", value: `${member.user}` },
             { name: "👥 العدد", value: `${member.guild.memberCount}` }
-        )
-        .setTimestamp();
+        );
 
-    logChannel.send({ embeds: [embed] });
-
+    ch.send({ embeds: [embed] });
 });
 
-
 // =========================
-// 👋 خروج السيرفر
+// 👋 خروج سيرفر
 // =========================
 client.on("guildMemberRemove", async (member) => {
 
-    const logChannel = client.channels.cache.get("1428876173357875211");
-    if (!logChannel) return;
+    const ch = client.channels.cache.get("1428876173357875211");
+    if (!ch) return;
 
     const embed = new EmbedBuilder()
-        .setTitle("📤 عضو خرج من السيرفر")
+        .setTitle("📤 خروج عضو")
         .setColor("Grey")
         .setThumbnail(member.user.displayAvatarURL())
         .addFields(
-            { name: "👤 العضو", value: `${member.user}`, inline: true },
-            { name: "🆔 الايدي", value: member.user.id, inline: true },
+            { name: "👤", value: `${member.user}` },
             { name: "👥 المتبقي", value: `${member.guild.memberCount}` }
-        )
-        .setTimestamp();
+        );
 
-    logChannel.send({ embeds: [embed] });
-
+    ch.send({ embeds: [embed] });
 });
 
-
 // =========================
-// 🎧 فويس دخول/خروج
+// 🎧 فويس
 // =========================
 client.on("voiceStateUpdate", async (oldState, newState) => {
 
-    const logChannel = client.channels.cache.get("1428876175345844294");
-    if (!logChannel) return;
+    const ch = client.channels.cache.get("1428876175345844294");
+    if (!ch) return;
 
-    const member = newState.member || oldState.member;
+    const member = newState.member;
 
     if (!oldState.channel && newState.channel) {
 
         const embed = new EmbedBuilder()
             .setColor("Green")
             .setTitle("🎧 دخول فويس")
-            .setThumbnail(member.user.displayAvatarURL())
             .addFields(
-                { name: "👤 العضو", value: `${member.user}`, inline: true },
-                { name: "🎙️ الروم", value: `${newState.channel}`, inline: true }
-            )
-            .setTimestamp();
+                { name: "👤", value: `${member.user}` },
+                { name: "🎙️ روم", value: `${newState.channel}` }
+            );
 
-        logChannel.send({ embeds: [embed] });
-
+        ch.send({ embeds: [embed] });
     }
 
     if (oldState.channel && !newState.channel) {
 
         const embed = new EmbedBuilder()
             .setColor("Red")
-            .setTitle("🚪 خروج من فويس")
-            .setThumbnail(member.user.displayAvatarURL())
+            .setTitle("🚪 خروج فويس")
             .addFields(
-                { name: "👤 العضو", value: `${member.user}`, inline: true },
-                { name: "🎙️ الروم", value: `${oldState.channel}`, inline: true }
-            )
-            .setTimestamp();
+                { name: "👤", value: `${member.user}` },
+                { name: "🎙️ روم", value: `${oldState.channel}` }
+            );
 
-        logChannel.send({ embeds: [embed] });
-
+        ch.send({ embeds: [embed] });
     }
-
 });
-
 
 // =========================
 // 🗑️ حذف رسالة
@@ -116,172 +135,163 @@ client.on("messageDelete", async (message) => {
 
     if (!message.author || message.author.bot) return;
 
-    const logChannel = client.channels.cache.get("1428876166982533180");
-    if (!logChannel) return;
+    const ch = client.channels.cache.get("1428876166982533180");
+    if (!ch) return;
 
-    const embed = new EmbedBuilder()
-        .setColor("Red")
-        .setTitle("🗑️ حذف رسالة")
-        .addFields(
-            { name: "👤 العضو", value: `${message.author}` },
-            { name: "📂 الروم", value: `${message.channel}` },
-            { name: "💬 الرسالة", value: message.content || "بدون محتوى" }
-        )
-        .setTimestamp();
-
-    logChannel.send({ embeds: [embed] });
-
+    ch.send({
+        embeds: [
+            new EmbedBuilder()
+                .setTitle("🗑️ حذف رسالة")
+                .setColor("Red")
+                .addFields(
+                    { name: "👤", value: `${message.author}` },
+                    { name: "💬", value: message.content || "بدون" }
+                )
+        ]
+    });
 });
-
 
 // =========================
 // ✏️ تعديل رسالة
 // =========================
-client.on("messageUpdate", async (oldMessage, newMessage) => {
+client.on("messageUpdate", async (oldMsg, newMsg) => {
 
-    if (!oldMessage.author || oldMessage.author.bot) return;
-    if (oldMessage.content === newMessage.content) return;
+    if (!oldMsg.author || oldMsg.author.bot) return;
 
-    const logChannel = client.channels.cache.get("1428876168639021146");
-    if (!logChannel) return;
+    const ch = client.channels.cache.get("1428876168639021146");
+    if (!ch) return;
 
-    const embed = new EmbedBuilder()
-        .setColor("Orange")
-        .setTitle("✏️ تعديل رسالة")
-        .addFields(
-            { name: "👤 العضو", value: `${oldMessage.author}` },
-            { name: "📜 قبل", value: oldMessage.content || "فارغ" },
-            { name: "📜 بعد", value: newMessage.content || "فارغ" }
-        )
-        .setTimestamp();
-
-    logChannel.send({ embeds: [embed] });
-
-});
-
-
-// =========================
-// ⏳ تايم + 🎖️ رتب
-// =========================
-client.on("guildMemberUpdate", async (oldMember, newMember) => {
-
-    // تايم أوت
-    if (!oldMember.communicationDisabledUntil &&
-        newMember.communicationDisabledUntil) {
-
-        const logChannel = client.channels.cache.get("1428876162645495810");
-
-        if (logChannel) {
-            logChannel.send({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor("Yellow")
-                        .setTitle("⏳ تايم أوت")
-                        .addFields({ name: "👤 العضو", value: `${newMember.user}` })
-                        .setTimestamp()
-                ]
-            });
-        }
-    }
-
-    // الرتب
-    if (oldMember.roles.cache.size !== newMember.roles.cache.size) {
-
-        const logChannel = client.channels.cache.get("1428876165690560512");
-
-        if (logChannel) {
-            logChannel.send({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor("Blue")
-                        .setTitle("🎖️ تعديل رتب")
-                        .addFields({ name: "👤 العضو", value: `${newMember.user}` })
-                        .setTimestamp()
-                ]
-            });
-        }
-    }
-
-});
-
-
-// =========================
-// 🔨 بان
-// =========================
-client.on("guildBanAdd", async (ban) => {
-
-    const logChannel = ban.guild.channels.cache.get("1428876161038942328");
-    if (!logChannel) return;
-
-    const embed = new EmbedBuilder()
-        .setColor("DarkRed")
-        .setTitle("🔨 بان")
-        .addFields({ name: "👤 العضو", value: `${ban.user}` })
-        .setTimestamp();
-
-    logChannel.send({ embeds: [embed] });
-
-});
-
-
-// =========================
-// ✅ فك بان
-// =========================
-client.on("guildBanRemove", async (ban) => {
-
-    const logChannel = ban.guild.channels.cache.get("1428876161038942328");
-    if (!logChannel) return;
-
-    const embed = new EmbedBuilder()
-        .setColor("Green")
-        .setTitle("✅ فك بان")
-        .addFields({ name: "👤 العضو", value: `${ban.user}` })
-        .setTimestamp();
-
-    logChannel.send({ embeds: [embed] });
-
-});
-
-
-// =========================
-// 👢 كيك
-// =========================
-client.on("guildMemberRemove", async (member) => {
-
-    setTimeout(async () => {
-
-        try {
-
-            const logs = await member.guild.fetchAuditLogs({
-                type: 20,
-                limit: 1
-            });
-
-            const audit = logs.entries.first();
-            if (!audit) return;
-
-            const logChannel = client.channels.cache.get("1428876170145042494");
-            if (!logChannel) return;
-
-            const embed = new EmbedBuilder()
-                .setColor("Red")
-                .setTitle("👢 طرد عضو")
+    ch.send({
+        embeds: [
+            new EmbedBuilder()
+                .setTitle("✏️ تعديل رسالة")
+                .setColor("Orange")
                 .addFields(
-                    { name: "👤 العضو", value: `${member.user}` },
-                    { name: "🛡️ المسؤول", value: `${audit.executor}` }
+                    { name: "قبل", value: oldMsg.content || "فارغ" },
+                    { name: "بعد", value: newMsg.content || "فارغ" }
                 )
-                .setTimestamp();
+        ]
+    });
+});
 
-            logChannel.send({ embeds: [embed] });
+// =========================
+// 🧹 أوامر + إدارة
+// =========================
+client.on("messageCreate", async (message) => {
 
-        } catch {}
+    if (message.author.bot) return;
+    if (!message.content.startsWith(PREFIX)) return;
 
-    }, 1000);
+    const args = message.content.slice(PREFIX.length).trim().split(/ +/);
+    const cmd = args.shift();
+
+    const member = message.member;
+
+    // 🧹 مسح
+    if (cmd === "مسح" || cmd === "م") {
+        if (!hasRole(member)) return;
+
+        const amount = parseInt(args[0]);
+        if (!amount) return;
+
+        message.channel.bulkDelete(amount);
+    }
+
+    // ⚠️ تحذير
+    if (cmd === "تحذير" || cmd === "ت") {
+
+        if (!hasRole(member)) return;
+
+        const target = message.mentions.members.first();
+        const reason = args.slice(1).join(" ");
+
+        if (!target || !reason) return;
+
+        if (!warns[target.id]) warns[target.id] = [];
+
+        warns[target.id].push({
+            reason,
+            by: message.author.tag
+        });
+
+        saveWarns();
+
+        message.channel.send(`⚠️ تم تحذير ${target.user.tag}`);
+    }
+
+    // 📜 تحذيرات
+    if (cmd === "التحذيرات" || cmd === "تت") {
+
+        const target = message.mentions.members.first() || member;
+
+        const list = warns[target.id] || [];
+
+        if (!list.length) return message.reply("ما عنده تحذيرات");
+
+        message.channel.send(
+            list.map((w, i) => `${i + 1}- ${w.reason}`).join("\n")
+        );
+    }
+
+    // 🗑️ حذف تحذير
+    if (cmd === "تح" || cmd === "ازاله") {
+
+        if (!hasRole(member)) return;
+
+        const target = message.mentions.members.first();
+        if (!target) return;
+
+        warns[target.id] = [];
+
+        saveWarns();
+
+        message.channel.send("🗑️ تم الحذف");
+    }
+
+    // 🎖️ رول
+    if (cmd === "رول") {
+
+        if (!isAdmin(member)) return;
+
+        const target = message.mentions.members.first();
+        const role = message.mentions.roles.first();
+
+        if (!target || !role) return;
+
+        target.roles.add(role);
+
+        message.channel.send("🎖️ تم إعطاء رتبة");
+    }
+
+    // 👢 كيك
+    if (["كيك", "طرد", "برا"].includes(cmd)) {
+
+        if (!isAdmin(member)) return;
+
+        const target = message.mentions.members.first();
+        if (!target) return;
+
+        target.kick();
+
+        message.channel.send("👢 تم الطرد");
+    }
+
+    // 🔨 بان
+    if (["الصومال", "فرنسا", "بنعالي", "الهند"].includes(cmd)) {
+
+        if (!isAdmin(member)) return;
+
+        const target = message.mentions.members.first();
+        if (!target) return;
+
+        target.ban();
+
+        message.channel.send("🔨 تم البان");
+    }
 
 });
 
-
 // =========================
-// تشغيل البوت
+// تشغيل
 // =========================
 client.login(process.env.TOKEN);
