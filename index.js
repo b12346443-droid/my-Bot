@@ -1,5 +1,4 @@
 const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
-require("dotenv").config();
 
 const client = new Client({
     intents: [
@@ -34,7 +33,6 @@ client.on("guildMemberAdd", async (member) => {
             { name: "🆔 الايدي", value: member.user.id, inline: true },
             { name: "👥 العدد", value: `${member.guild.memberCount}` }
         )
-        .setFooter({ text: member.guild.name })
         .setTimestamp();
 
     logChannel.send({ embeds: [embed] });
@@ -67,7 +65,7 @@ client.on("guildMemberRemove", async (member) => {
 
 
 // =========================
-// 🎧 فويس
+// 🎧 فويس دخول/خروج
 // =========================
 client.on("voiceStateUpdate", async (oldState, newState) => {
 
@@ -124,7 +122,6 @@ client.on("messageDelete", async (message) => {
     const embed = new EmbedBuilder()
         .setColor("Red")
         .setTitle("🗑️ حذف رسالة")
-        .setThumbnail(message.author.displayAvatarURL())
         .addFields(
             { name: "👤 العضو", value: `${message.author}` },
             { name: "📂 الروم", value: `${message.channel}` },
@@ -151,7 +148,6 @@ client.on("messageUpdate", async (oldMessage, newMessage) => {
     const embed = new EmbedBuilder()
         .setColor("Orange")
         .setTitle("✏️ تعديل رسالة")
-        .setThumbnail(oldMessage.author.displayAvatarURL())
         .addFields(
             { name: "👤 العضو", value: `${oldMessage.author}` },
             { name: "📜 قبل", value: oldMessage.content || "فارغ" },
@@ -165,70 +161,62 @@ client.on("messageUpdate", async (oldMessage, newMessage) => {
 
 
 // =========================
-// ⏳ تايم اوت + 🎖️ رتب
+// ⏳ تايم + 🎖️ رتب
 // =========================
 client.on("guildMemberUpdate", async (oldMember, newMember) => {
 
-    // تايم
+    // تايم أوت
     if (!oldMember.communicationDisabledUntil &&
         newMember.communicationDisabledUntil) {
 
-        const timeLog = client.channels.cache.get("1428876162645495810");
+        const logChannel = client.channels.cache.get("1428876162645495810");
 
-        if (timeLog) {
-
-            const embed = new EmbedBuilder()
-                .setColor("Yellow")
-                .setTitle("⏳ تايم أوت")
-                .addFields(
-                    { name: "👤 العضو", value: `${newMember.user}` }
-                )
-                .setTimestamp();
-
-            timeLog.send({ embeds: [embed] });
-
+        if (logChannel) {
+            logChannel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("Yellow")
+                        .setTitle("⏳ تايم أوت")
+                        .addFields({ name: "👤 العضو", value: `${newMember.user}` })
+                        .setTimestamp()
+                ]
+            });
         }
-
     }
 
-    // رتب
+    // الرتب
     if (oldMember.roles.cache.size !== newMember.roles.cache.size) {
 
-        const roleLog = client.channels.cache.get("1428876165690560512");
+        const logChannel = client.channels.cache.get("1428876165690560512");
 
-        if (roleLog) {
-
-            const embed = new EmbedBuilder()
-                .setColor("Blue")
-                .setTitle("🎖️ تعديل رتب")
-                .addFields(
-                    { name: "👤 العضو", value: `${newMember.user}` }
-                )
-                .setTimestamp();
-
-            roleLog.send({ embeds: [embed] });
-
+        if (logChannel) {
+            logChannel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor("Blue")
+                        .setTitle("🎖️ تعديل رتب")
+                        .addFields({ name: "👤 العضو", value: `${newMember.user}` })
+                        .setTimestamp()
+                ]
+            });
         }
-
     }
 
 });
 
 
 // =========================
-// 🗑️ حذف روم
+// 🔨 بان
 // =========================
-client.on("channelDelete", async (channel) => {
+client.on("guildBanAdd", async (ban) => {
 
-    const logChannel = client.channels.cache.get("1428876164574740501");
+    const logChannel = ban.guild.channels.cache.get("1428876161038942328");
     if (!logChannel) return;
 
     const embed = new EmbedBuilder()
-        .setTitle("🗑️ حذف روم")
-        .setColor("Red")
-        .addFields(
-            { name: "📂 الروم", value: channel.name }
-        )
+        .setColor("DarkRed")
+        .setTitle("🔨 بان")
+        .addFields({ name: "👤 العضو", value: `${ban.user}` })
         .setTimestamp();
 
     logChannel.send({ embeds: [embed] });
@@ -237,22 +225,17 @@ client.on("channelDelete", async (channel) => {
 
 
 // =========================
-// ✏️ تعديل روم
+// ✅ فك بان
 // =========================
-client.on("channelUpdate", async (oldChannel, newChannel) => {
+client.on("guildBanRemove", async (ban) => {
 
-    const logChannel = client.channels.cache.get("1428876164574740501");
+    const logChannel = ban.guild.channels.cache.get("1428876161038942328");
     if (!logChannel) return;
 
-    if (oldChannel.name === newChannel.name) return;
-
     const embed = new EmbedBuilder()
-        .setTitle("✏️ تعديل روم")
-        .setColor("Orange")
-        .addFields(
-            { name: "📂 قبل", value: oldChannel.name },
-            { name: "📂 بعد", value: newChannel.name }
-        )
+        .setColor("Green")
+        .setTitle("✅ فك بان")
+        .addFields({ name: "👤 العضو", value: `${ban.user}` })
         .setTimestamp();
 
     logChannel.send({ embeds: [embed] });
@@ -267,9 +250,6 @@ client.on("guildMemberRemove", async (member) => {
 
     setTimeout(async () => {
 
-        const logChannel = client.channels.cache.get("1428876170145042494");
-        if (!logChannel) return;
-
         try {
 
             const logs = await member.guild.fetchAuditLogs({
@@ -279,6 +259,9 @@ client.on("guildMemberRemove", async (member) => {
 
             const audit = logs.entries.first();
             if (!audit) return;
+
+            const logChannel = client.channels.cache.get("1428876170145042494");
+            if (!logChannel) return;
 
             const embed = new EmbedBuilder()
                 .setColor("Red")
@@ -299,45 +282,6 @@ client.on("guildMemberRemove", async (member) => {
 
 
 // =========================
-// 🔨 بان
+// تشغيل البوت
 // =========================
-client.on("guildBanAdd", async (ban) => {
-
-    const logChannel = ban.guild.channels.cache.get("1428876161038942328");
-    if (!logChannel) return;
-
-    const embed = new EmbedBuilder()
-        .setColor("DarkRed")
-        .setTitle("🔨 بان عضو")
-        .addFields(
-            { name: "👤 العضو", value: `${ban.user}` }
-        )
-        .setTimestamp();
-
-    logChannel.send({ embeds: [embed] });
-
-});
-
-
-// =========================
-// ✅ فك بان
-// =========================
-client.on("guildBanRemove", async (ban) => {
-
-    const logChannel = ban.guild.channels.cache.get("1428876161038942328");
-    if (!logChannel) return;
-
-    const embed = new EmbedBuilder()
-        .setColor("Green")
-        .setTitle("✅ فك بان")
-        .addFields(
-            { name: "👤 العضو", value: `${ban.user}` }
-        )
-        .setTimestamp();
-
-    logChannel.send({ embeds: [embed] });
-
-});
-
-
 client.login(process.env.TOKEN);
