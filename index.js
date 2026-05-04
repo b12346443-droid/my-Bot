@@ -1,3 +1,4 @@
+
 // ======================================================
 // 📌 المتطلبات الأساسية
 // ======================================================
@@ -558,9 +559,15 @@ if (cmd === "فتح" || cmd === "ف") {
     message.channel.send({ embeds: [embed] });
 }
 
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN)client.login(process.env.TOKEN);
 
 const http = require("http");
-http.createServer((req, res) => res.end("Bot is running")).listen(3000);
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.end("Bot is running");
+});
+
+server.listen(process.env.PORT || 3000);
+
 
 
