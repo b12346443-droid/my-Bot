@@ -468,75 +468,80 @@ client.on("messageCreate", async (message) => {
             message.channel.send({ embeds: [embed] });
         }
 
-       // =======================
-// تحذير
-// =======================
-if (cmd === "تحذير" || cmd === "ت") {
-    if (!hasRole(member)) return;
+        // =======================
+        // تحذير
+        // =======================
+        if (cmd === "تحذير" || cmd === "ت") {
+            if (!hasRole(member)) return;
 
-    const target = message.mentions.members.first();
-    const reason = args.slice(1).join(" ");
-    if (!target || !reason) return;
+            const target = message.mentions.members.first();
+            const reason = args.slice(1).join(" ");
+            if (!target || !reason) return;
 
-    if (!warns[target.id]) warns[target.id] = [];
-    warns[target.id].push({ reason, by: message.author.tag });
-    saveWarns();
+            if (!warns[target.id]) warns[target.id] = [];
+            warns[target.id].push({ reason, by: message.author.tag });
+            saveWarns();
 
-    const embed = new EmbedBuilder()
-        .setColor("#e67e22")
-        .setTitle("⚠️ | تم إصدار تحذير")
-        .setDescription(`• العضو: **${target.user.tag}**
+            const embed = new EmbedBuilder()
+                .setColor("#e67e22")
+                .setTitle("⚠️ | تم إصدار تحذير")
+                .setDescription(`• العضو: **${target.user.tag}**
 • السبب: **${reason}**
 • بواسطة: **${member.user.tag}**`)
-        .setFooter({ text: FOOTER })
-        .setTimestamp();
+                .setFooter({ text: FOOTER })
+                .setTimestamp();
 
-    message.channel.send({ embeds: [embed] });
-}
+            message.channel.send({ embeds: [embed] });
+        }
 
-// =======================
-// قفل الروم -قفل / -ق
-// =======================
-if (cmd === "قفل" || cmd === "ق") {
-    if (!isAdmin(member)) return;
+        // =======================
+        // قفل الروم -قفل / -ق
+        // =======================
+        if (cmd === "قفل" || cmd === "ق") {
+            if (!isAdmin(member)) return;
 
-    await message.channel.permissionOverwrites.edit(
-        message.guild.id,
-        { SendMessages: false }
-    );
+            await message.channel.permissionOverwrites.edit(
+                message.guild.id,
+                { SendMessages: false }
+            );
 
-    const embed = new EmbedBuilder()
-        .setColor("#e74c3c")
-        .setTitle("🔒 | تم قفل الروم")
-        .setDescription(`• تم منع إرسال الرسائل في هذا الروم
+            const embed = new EmbedBuilder()
+                .setColor("#e74c3c")
+                .setTitle("🔒 | تم قفل الروم")
+                .setDescription(`• تم منع إرسال الرسائل في هذا الروم
 • بواسطة: **${member.user.tag}**`)
-        .setFooter({ text: FOOTER })
-        .setTimestamp();
+                .setFooter({ text: FOOTER })
+                .setTimestamp();
 
-    message.channel.send({ embeds: [embed] });
-}
+            message.channel.send({ embeds: [embed] });
+        }
 
-// =======================
-// فتح الروم -فتح / -ف
-// =======================
-if (cmd === "فتح" || cmd === "ف") {
-    if (!isAdmin(member)) return;
+        // =======================
+        // فتح الروم -فتح / -ف
+        // =======================
+        if (cmd === "فتح" || cmd === "ف") {
+            if (!isAdmin(member)) return;
 
-    await message.channel.permissionOverwrites.edit(
-        message.guild.id,
-        { SendMessages: true }
-    );
+            await message.channel.permissionOverwrites.edit(
+                message.guild.id,
+                { SendMessages: true }
+            );
 
-    const embed = new EmbedBuilder()
-        .setColor("#2ecc71")
-        .setTitle("🔓 | تم فتح الروم")
-        .setDescription(`• تم السماح بإرسال الرسائل في هذا الروم
+            const embed = new EmbedBuilder()
+                .setColor("#2ecc71")
+                .setTitle("🔓 | تم فتح الروم")
+                .setDescription(`• تم السماح بإرسال الرسائل في هذا الروم
 • بواسطة: **${member.user.tag}**`)
-        .setFooter({ text: FOOTER })
-        .setTimestamp();
+                .setFooter({ text: FOOTER })
+                .setTimestamp();
 
-    message.channel.send({ embeds: [embed] });
-}
+            message.channel.send({ embeds: [embed] });
+        }
+
+    } catch (err) {
+        console.error(err);
+    }
+}); // ← ← ← إغلاق الحدث كامل
 
 client.login(process.env.TOKEN);
 
