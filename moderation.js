@@ -106,6 +106,68 @@ module.exports = {
             interaction.reply(`⏳ | تم إعطاء **${target.user.tag}** تايم لمدة **${duration} ثانية**`);
         }
 
+        // /تحذير
+        if (interaction.commandName === "تحذير") {
+            if (!hasMod(member)) return interaction.reply({ content: "❌ | ما عندك صلاحية.", ephemeral: true });
+
+            const target = interaction.options.getMember("العضو");
+            const reason = interaction.options.getString("السبب");
+
+            if (!warns[target.id]) warns[target.id] = [];
+            warns[target.id].push({ reason, by: interaction.user.tag });
+            saveWarns();
+
+            interaction.reply(`⚠️ | تم تحذير **${target.user.tag}**`);
+        }
+
+        // /مسح
+        if (interaction.commandName === "مسح") {
+            if (!hasMod(member)) return interaction.reply({ content: "❌ | ما عندك صلاحية.", ephemeral: true });
+
+            const amount = interaction.options.getInteger("العدد");
+            await interaction.channel.bulkDelete(amount, true);
+
+            interaction.reply(`🧹 | تم مسح **${amount}** رسالة`);
+        }
+
+        // /قفل
+        if (interaction.commandName === "قفل") {
+            if (!hasAdmin(member)) return interaction.reply({ content: "❌ | ما عندك صلاحية.", ephemeral: true });
+
+            await interaction.channel.permissionOverwrites.edit(interaction.guild.id, { SendMessages: false });
+            interaction.reply("🔒 | تم قفل الروم");
+        }
+
+        // /فتح
+        if (interaction.commandName === "فتح") {
+            if (!hasAdmin(member)) return interaction.reply({ content: "❌ | ما عندك صلاحية.", ephemeral: true });
+
+            await interaction.channel.permissionOverwrites.edit(interaction.guild.id, { SendMessages: true });
+            interaction.reply("🔓 | تم فتح الروم");
+        }
+
+        // /كيك
+        if (interaction.commandName === "كيك") {
+            if (!hasMod(member)) return interaction.reply({ content: "❌ | ما عندك صلاحية.", ephemeral: true });
+
+            const target = interaction.options.getMember("العضو");
+            const reason = interaction.options.getString("السبب") || "بدون سبب";
+
+            await target.kick(reason);
+            interaction.reply(`👢 | تم طرد **${target.user.tag}**`);
+        }
+
+        // /بان
+        if (interaction.commandName === "بان") {
+            if (!hasAdmin(member)) return interaction.reply({ content: "❌ | ما عندك صلاحية.", ephemeral: true });
+
+            const target = interaction.options.getMember("العضو");
+            const reason = interaction.options.getString("السبب") || "بدون سبب";
+
+            await target.ban({ reason });
+            interaction.reply(`⛔ | تم حظر **${target.user.tag}**`);
+        }
+
         // /شيل_التايم
         if (interaction.commandName === "شيل_التايم") {
             if (!hasMod(member)) return interaction.reply({ content: "❌ | ما عندك صلاحية.", ephemeral: true });
