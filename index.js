@@ -1,80 +1,76 @@
 require("dotenv").config();
 const { Client, GatewayIntentBits, REST, Routes } = require("discord.js");
 const express = require("express");
+const fs = require("fs");
 
 // ===============================
-// 0) تشغيل Web Server لمنع Railway من إيقاف البوت
+// 0) Web Server لمنع الإيقاف
 // ===============================
 const app = express();
-
 app.get("/", (req, res) => res.send("Bot is running"));
-app.get("/disable", (req, res) => res.send("OK"));
-
 app.listen(process.env.PORT || 3000, () => {
     console.log("🌐 Web server started");
 });
 
 // ===============================
-// 1) حذف أوامر السلاش القديمة
+// 1) تسجيل أوامر السلاش
 // ===============================
-(async () => {
-    try {
-        const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
-        console.log("🗑️ جاري حذف أوامر السلاش القديمة...");
-
-        await rest.put(
-            Routes.applicationCommands(process.env.CLIENT_ID),
-            { body: [] }
-        );
-
-        console.log("🗑️ تم حذف كل أوامر السلاش!");
-    } catch (err) {
-        console.error(err);
-    }
-})();
-
-// ===============================
-// 2) تسجيل أوامر السلاش الجديدة
-// ===============================
 const commands = [
     {
         name: "تايم",
         description: "إعطاء تايم أوت لعضو",
         options: [
-            {
-                name: "العضو",
-                type: 6,
-                required: true,
-                description: "اختر العضو"
-            },
-            {
-                name: "المدة",
-                type: 4,
-                required: true,
-                description: "المدة بالثواني"
-            },
-            {
-                name: "السبب",
-                type: 3,
-                required: false,
-                description: "سبب التايم أوت"
-            }
+            { name: "العضو", type: 6, required: true, description: "اختر العضو" },
+            { name: "المدة", type: 4, required: true, description: "المدة بالثواني" },
+            { name: "السبب", type: 3, required: false, description: "سبب التايم أوت" }
+        ]
+    },
+    {
+        name: "تحذير",
+        description: "إعطاء تحذير لعضو",
+        options: [
+            { name: "العضو", type: 6, required: true, description: "اختر العضو" },
+            { name: "السبب", type: 3, required: true, description: "سبب التحذير" }
+        ]
+    },
+    {
+        name: "مسح",
+        description: "مسح عدد من الرسائل",
+        options: [
+            { name: "العدد", type: 4, required: true, description: "عدد الرسائل" }
+        ]
+    },
+    { name: "قفل", description: "قفل الروم" },
+    { name: "فتح", description: "فتح الروم" },
+    {
+        name: "كيك",
+        description: "طرد عضو",
+        options: [
+            { name: "العضو", type: 6, required: true, description: "اختر العضو" },
+            { name: "السبب", type: 3, required: false, description: "سبب الطرد" }
+        ]
+    },
+    {
+        name: "بان",
+        description: "حظر عضو",
+        options: [
+            { name: "العضو", type: 6, required: true, description: "اختر العضو" },
+            { name: "السبب", type: 3, required: false, description: "سبب الحظر" }
         ]
     }
 ];
 
+// تسجيل السلاش
 (async () => {
     try {
         const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
         console.log("⚙️ جاري تسجيل أوامر السلاش...");
-
         await rest.put(
             Routes.applicationCommands(process.env.CLIENT_ID),
             { body: commands }
         );
-
         console.log("✅ تم تسجيل أوامر السلاش!");
     } catch (err) {
         console.error(err);
@@ -82,12 +78,17 @@ const commands = [
 })();
 
 // ===============================
-// 3) تشغيل البوت
+// 2) تشغيل البوت
 // ===============================
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildModeration,
+        GatewayIntentBits.GuildMessageReactions
     ]
 });
 
@@ -96,37 +97,16 @@ client.once("clientReady", () => {
 });
 
 // ===============================
-// 4) تنفيذ أمر /تايم
+// 3) تحميل جميع ملفات events
 // ===============================
-client.on("interactionCreate", async interaction => {
-    if (!interaction.isChatInputCommand()) return;
-
-    if (interaction.commandName === "تايم") {
-        const member = interaction.options.getMember("العضو");
-        const duration = interaction.options.getInteger("المدة");
-        const reason = interaction.options.getString("السبب") || "بدون سبب";
-
-        if (!member.moderatable) {
-            return interaction.reply({
-                content: "❌ لا يمكن إعطاء تايم لهذا العضو.",
-                ephemeral: true
-            });
-        }
-
-        try {
-            await member.timeout(duration * 1000, reason);
-
-            await interaction.reply(
-                `⏳ تم إعطاء تايم لـ ${member} لمدة **${duration} ثانية**.\nالسبب: ${reason}`
-            );
-        } catch (err) {
-            console.error(err);
-            await interaction.reply("❌ حدث خطأ أثناء تنفيذ الأمر.");
-        }
-    }
+fs.readdirSync("./events").forEach(file => {
+    const event = require(`./events/${file}`);
+    const eventName = file.replace(".js", "");
+    client.on(eventName, (...args) => event(client, ...args));
+    console.log(`📌 Event Loaded: ${eventName}`);
 });
 
 // ===============================
-// 5) تسجيل الدخول
+// 4) تسجيل الدخول
 // ===============================
 client.login(process.env.TOKEN);
