@@ -6,8 +6,13 @@ const express = require("express");
 // 0) تشغيل Web Server لمنع Railway من إيقاف البوت
 // ===============================
 const app = express();
+
 app.get("/", (req, res) => res.send("Bot is running"));
-app.listen(process.env.PORT || 3000);
+app.get("/disable", (req, res) => res.send("OK"));
+
+app.listen(process.env.PORT || 3000, () => {
+    console.log("🌐 Web server started");
+});
 
 // ===============================
 // 1) حذف أوامر السلاش القديمة
@@ -32,7 +37,6 @@ app.listen(process.env.PORT || 3000);
 // ===============================
 // 2) تسجيل أوامر السلاش الجديدة
 // ===============================
-
 const commands = [
     {
         name: "تايم",
@@ -80,7 +84,6 @@ const commands = [
 // ===============================
 // 3) تشغيل البوت
 // ===============================
-
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -88,14 +91,13 @@ const client = new Client({
     ]
 });
 
-client.once("ready", () => {
+client.once("clientReady", () => {
     console.log(`🤖 Logged in as ${client.user.tag}`);
 });
 
 // ===============================
 // 4) تنفيذ أمر /تايم
 // ===============================
-
 client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
@@ -105,15 +107,21 @@ client.on("interactionCreate", async interaction => {
         const reason = interaction.options.getString("السبب") || "بدون سبب";
 
         if (!member.moderatable) {
-            return interaction.reply({ content: "❌ لا يمكن إعطاء تايم لهذا العضو.", ephemeral: true });
+            return interaction.reply({
+                content: "❌ لا يمكن إعطاء تايم لهذا العضو.",
+                ephemeral: true
+            });
         }
 
         try {
             await member.timeout(duration * 1000, reason);
-            interaction.reply(`⏳ تم إعطاء تايم لـ ${member} لمدة **${duration} ثانية**.\nالسبب: ${reason}`);
+
+            await interaction.reply(
+                `⏳ تم إعطاء تايم لـ ${member} لمدة **${duration} ثانية**.\nالسبب: ${reason}`
+            );
         } catch (err) {
             console.error(err);
-            interaction.reply("❌ حدث خطأ أثناء تنفيذ الأمر.");
+            await interaction.reply("❌ حدث خطأ أثناء تنفيذ الأمر.");
         }
     }
 });
