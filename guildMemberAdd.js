@@ -1,4 +1,5 @@
-const { EmbedBuilder } = require("discord.js");
+const { AttachmentBuilder } = require("discord.js");
+const Canvas = require("canvas");
 
 module.exports = async (client, member) => {
     try {
@@ -6,23 +7,53 @@ module.exports = async (client, member) => {
         const channel = member.guild.channels.cache.get(channelId);
         if (!channel) return;
 
-        const welcomeImage = "https://media.discordapp.net/attachments/1457006310825660467/1500573799890948286/ChatGPT_Image_Apr_28_2026_10_34_45_PM-1.png";
+        // تحميل الخلفية
+        const background = await Canvas.loadImage("https://media.discordapp.net/attachments/1457006310825660467/1500573799890948286/ChatGPT_Image_Apr_28_2026_10_34_45_PM-1.png");
 
-        const embed = new EmbedBuilder()
-            .setColor("#2ecc71")
-            .setTitle("Welcome to ANR2 Community")
-            .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-            .setImage(welcomeImage)
-            .setDescription(`
-♥︎ 𝑾𝒆𝒍𝒄𝒐𝒎𝒆 𝒕𝒐 𝑨𝑵𝑹𝟐 𝑪𝑶𝑴𝑴𝑼𝑵𝑰𝑻𝒀 🌊 <@${member.id}>  
+        // تحميل صورة العضو
+        const avatar = await Canvas.loadImage(member.user.displayAvatarURL({ extension: "png" }));
 
-★ 𝐘𝐨𝐮 𝐍𝐮𝐦𝐛𝐞𝐫 **${member.guild.memberCount}** ✨️  
-𝐀𝐜𝐭 𝐋𝐢𝐤𝐞 𝐭𝐡𝐢𝐬 𝐩𝐥𝐚𝐜𝐞 𝐢𝐬 𝐲𝐨𝐮𝐫 𝐡𝐨𝐦𝐞
-            `)
-            .setFooter({ text: "ANR2 System" })
-            .setTimestamp();
+        // إنشاء الكانفس
+        const canvas = Canvas.createCanvas(1024, 450);
+        const ctx = canvas.getContext("2d");
 
-        channel.send({ embeds: [embed] });
+        // رسم الخلفية
+        ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
+
+        // رسم صورة العضو داخل دائرة
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(150, 225, 100, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatar, 50, 125, 200, 200);
+        ctx.restore();
+
+        // ============================
+        // كتابة النص داخل المستطيل
+        // ============================
+
+        ctx.font = "bold 50px Sans";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+
+        // مكان النص داخل المستطيل (عدّل الرقم إذا تبي)
+        ctx.fillText("Welcome To ANR2 Community", 650, 120);
+
+        // كتابة اسم العضو
+        ctx.font = "40px Sans";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(`${member.user.username}`, 650, 200);
+
+        // كتابة عدد الأعضاء
+        ctx.font = "30px Sans";
+        ctx.fillStyle = "#dddddd";
+        ctx.fillText(`You are member #${member.guild.memberCount}`, 650, 260);
+
+        // تجهيز الصورة للإرسال
+        const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: "welcome.png" });
+
+        channel.send({ files: [attachment] });
 
     } catch (err) {
         console.error(err);
